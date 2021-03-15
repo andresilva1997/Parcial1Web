@@ -6,6 +6,7 @@ const nav = document.querySelector("#navBar");
 const cartGoer = document.querySelector("#openCart");
 const cartCounter = document.querySelector("#cartCounter");
 let cart = [];
+let cantItems = 0;
 
 const url = 'https://gist.githubusercontent.com/josejbocanegra/9a28c356416badb8f9173daf36d1460b/raw/5ea84b9d43ff494fcbf5c5186544a18b42812f09/restaurant.json'
 
@@ -15,7 +16,6 @@ async function loadInfo(){
     try{
         let dat = await fetch(url);
         temp = await dat.json();
-        console.log("Hello world!");
         return temp;
     }catch(error){
         return
@@ -24,7 +24,7 @@ async function loadInfo(){
 
 
 async function menu(){
-    cartCounter.appendChild(document.createTextNode(cart.length));
+    cartCounter.appendChild(document.createTextNode(cantItems));
     temp.forEach(x=>{
         let list = document.createElement("li");
         list.className = "nav-item";
@@ -50,7 +50,7 @@ async function cardLoad(i){
     cardFlex.classList.add("d-flex", "flex-wrap");
     catTemp[0].products.forEach((y)=>{
         let card = document.createElement("div");
-        card.className = "card";
+        card.className = "card  classMax";
         let iCard = document.createElement("img");
         iCard.className = "card-img-top";
         iCard.src = y.image;
@@ -159,10 +159,12 @@ const cartLoad=()=>{
         let btn = document.createElement("button");
         btn.appendChild(document.createTextNode("+"));
         btn.addEventListener("click",()=>{add(x.name)});
+        btn.addEventListener("click",()=>{cartLoad()});
         item6.appendChild(btn);
         let btn2 = document.createElement("button");
         btn2.appendChild(document.createTextNode("-"));
         btn2.addEventListener("click",()=>{remove(x.name)});
+        btn2.addEventListener("click",()=>{cartLoad()});
         item6.appendChild(btn2);
         row2.appendChild(item6);
         body.appendChild(row2);
@@ -171,21 +173,87 @@ const cartLoad=()=>{
     table.appendChild(body);
     tableHolder.appendChild(table);
     cards.appendChild(tableHolder);
-
+    let row3 = document.createElement("row");
+    let tot = document.createElement("h4");
+    tot.appendChild(document.createTextNode(totalCost));
+    row3.appendChild(tot);
+    let confirm = document.createElement("button");
+    let cancel = document.createElement("button");
+    confirm.appendChild(document.createTextNode("Confirm Order"));
+    cancel.appendChild(document.createTextNode("Cancel"));
+    cancel.setAttribute("data-bs-toggle","modal");
+    cancel.setAttribute("data-bs-target","#modLaunch");
+    let modLaunch = document.createElement("div");
+    modLaunch.classList.add("modal","fade");
+    modLaunch.id = "modLaunch";
+    modLaunch.setAttribute("aria-labelledby","cancelModalLabel");
+    modLaunch.setAttribute("aria-hidden","true");
+    modLaunch.tabIndex = -1;
+    let modal1 = document.createElement("div");
+    modal1.className = "modal-dialog";
+    let modal2 = document.createElement("div");
+    modal2.className = "modal-content";
+    let modal3 = document.createElement("div");
+    modal3.className = "modal-header";
+    let modal4 = document.createElement("h6");
+    modal4.className = "modal-title";
+    modal4.id = "cancelModalLabel";
+    modal4.appendChild(document.createTextNode("Cancel the order"));
+    modal3.appendChild(modal4);
+    modal2.appendChild(modal3);
+    let modal5 = document.createElement("div");
+    modal5.className = "modal-body";
+    let modalP = document.createElement("p");
+    modalP.appendChild(document.createTextNode("Are you sure about canceling the order?"));
+    modal5.appendChild(modalP);
+    modal2.appendChild(modal5);
+    let footer = document.createElement("div");
+    footer.className = "modal-footer";
+    let btnAccept = document.createElement("button");
+    btnAccept.type = "button";
+    btnAccept.setAttribute("data-bs-dismiss","modal");
+    btnAccept.addEventListener("click",()=>{clearCart()});
+    btnAccept.appendChild(document.createTextNode("Yes, I want to cancel my order"));
+    footer.appendChild(btnAccept);
+    let btnClose = document.createElement("button");
+    btnClose.type = "button";
+    btnClose.setAttribute("data-bs-dismiss","modal")
+    btnClose.appendChild(document.createTextNode("No, I want to continue adding products"));
+    footer.appendChild(btnClose);
+    modal2.appendChild(footer);
+    modal1.appendChild(modal2);
+    modLaunch.appendChild(modal1);
+    confirm.addEventListener("click",()=>{console.log(cart)});
+    row3.appendChild(confirm);
+    row3.appendChild(cancel);
+    row3.appendChild(modLaunch);
+    cards.appendChild(row3);
 }
 
 const add=(i)=>{
     let j = cart.indexOf(cart.filter((k)=>{return k.name===i})[0]);
     cart[j].qty++;
     cart[j].total+=cart[j].price;
+    cantItems++;
+    cartCounter.replaceChild(document.createTextNode(cantItems),cartCounter.childNodes[0]);
 }
 
 const remove=(i)=>{
     let j = cart.indexOf(cart.filter((k)=>{return k.name===i})[0]);
     if(cart[j].qty!=0){
+        cantItems--;
         cart[j].qty--;
         cart[j].total-=cart[j].price;
     }
+    cartCounter.replaceChild(document.createTextNode(cantItems),cartCounter.childNodes[0]);
+}
+
+const clearCart=()=>{
+    cart = [];
+    cantItems = 0;
+    cartCounter.replaceChild(document.createTextNode(cantItems),cartCounter.childNodes[0]);
+    cartLoad();
+    console.log("orden cancelada exitosamente");
 }
 
 loadInfo().then(()=>menu());
